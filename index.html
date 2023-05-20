@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>`substitute(Filename('', 'Page Title'), '^.', '\u&', '')`</title>
+    <link rel="stylesheet" href="./css/eleme.css">
+    <!-- 必须先引入vue  后使用element-ui -->
+    <style>
+      .color-red{
+	  color:red;
+      }
+    </style>
+    <script src="./js/vue.js"></script>
+
+    <!-- 引入element 的组件库-->
+
+    <script src="./js/eleme.js"></script>
+</head>
+
+<body>
+    <div id="app">
+      <h1>组件编码风格</h1>
+      <p>Vue组件是很好的复用代码的方法。接下来，我们使用一个微小的案例来讲解组件。我们可以看到HTML代码</p>
+      <pre>
+	&lt;div id="app"&gt;
+	  &lt;span&gt;{{count}}&lt;/span&gt;
+	  &lt;button @click="inc"&gt;+&lt;/button&gt;
+	&lt;/div&gt;
+      </pre>
+      <p>标签&lt;span&gt;和&lt;button&gt;其实是一起合作，完成一个完整的功能，它们是内聚的;因此可以复用组件的概念，用一个语义化的自定义标签，把两个标签包装到一个组件内。以此观念，做完后应该得到这样的代码:</p>
+      <pre>
+	&lt;div id="app"&gt;
+	  &lt;counter&gt;&lt;/counter&gt;
+	&lt;/div&gt;
+      </pre>
+      <p>为此，我们需要创建一个组件，它可以容纳两个标签以及和它们有关的方法和数据，我们会采用多处方案来完成此组件，从而了解组件的多种编码风格。首先，我们从使用集中template的组件编码风格开始。</p>
+      <h2>集中模板模式</h2>
+      <p>以下代码是可以直接 保存为Html文件，并使用浏览器来打开 运行的</p>
+      <pre><!--start-->
+      
+      &lt;div id="app"&gt;
+	&lt;counter&gt;&lt;/counter&gt;
+      &lt;/div&gt;
+      &lt;script&gt;
+	var counter={
+	    'template': '&lt;div&gt;&lt;span&gt;{{count}}&lt;/span&gt;&lt;button @click="inc"&gt;+&lt;/button&gt;',
+	    data(){
+		return {count:0}
+	    },
+	    methods:{
+		inc(){this.count++}
+	    }
+	}
+
+	var app = new Vue({
+	    components:{
+		counter: counter
+	    }
+	})
+
+	app.$mount('#app')
+	&lt;/script&gt;
+	</pre>
+      <!--end-->
+      <p>1.Vue的实例属性template,它的值用来承载模板代码，本来放置在主HTML内的两个标签现在搬移到此处。需要注意的是，两个标签外套上了一个div标签，因为Vue2.0版本要求作为模板的html必须是单根的。
+      </p>
+      <p>
+	2.Vue的实例属性components。它可以被用来注册一个局部组件。正是在此处，组件counter被注册，从而 在html标签内可以直接使用标签<counter>来引用组件counter。
+      </p>
+      <p>引入组件技术后，强相关性的html标签和对应的数据、代码内聚到了一起，这是符合软件工程分治原则的行为。
+      </p>
+      <p>
+	另外，使用template在代码内混合html字符串还是比较烦人的:
+      </p>
+      <p>1.你得小心的在外层使用单引号，在内部使用以引号。</p>
+      <p>2.如果html比较 长，产生了跨行，这样的字符串书写比较麻烦</p>
+      <h2>分离模板式</h2>
+      <p>为了增加可读性，模板字符串内的HTML可以使用多种方式从代码中分离出来，比如采用x-template方法:</p>
+      <pre>
+	&lt;script src="https://unpkg.com/vue/dist/vue.js"&gt;&lt;/script&gt;
+	&lt;script type="x-template" id="t"&gt;
+    &lt;div&gt;
+    &lt;span&gt;{{count}}&lt;/span&gt;
+    &lt;button v-on:click="inc"&gt;+&lt;/button&gt;
+    &lt;/div&gt;
+	&lt;/script&gt;
+	&lt;div id="app"&gt;
+	  &lt;counter&gt;&lt;/counter&gt;
+	&lt;/div&gt;
+	&lt;script&gt;
+	  var counter={
+	      'template':'#t',
+	      data(){
+		  return {count: 0}
+	      },
+	      methods:{
+		  inc(){this.count++}
+	      }
+	  }
+	  var app = new Vue({
+	      components:{
+		  counter:counter
+	      }
+	  })
+	  app.$mount("#app")
+	&lt;/script&gt;
+      </pre>
+      <p>模板x-template使用标签script，因为这个标签的类型是浏览器无法识别的，故而浏览器只是简单地放在DOM节点上。这样你可以使用getElementById方法获取此节点，把它作为HTML片段使用。</p>
+      <p>或者使用HTML5引入的新标签template，看起来稍微干净些:</p>
+      <pre>
+	&lt;script src="https://unpkg.com/vue/dist/vue.js"&gt;&lt;/script&gt;
+	&lt;template id="t"&gt;
+	  &lt;div&gt;
+	    &lt;span&gt;{{count}}&lt;/span&gt;
+	    &lt;button v-on:click="inc"&gt;+&lt;/button&gt;
+	  &lt;/div&gt;
+	&lt;/template&gt;
+	&lt;div id="app"&gt;
+	  &lt;counter&gt;&lt;/counter&gt;
+	&lt;/div&gt;
+	&lt;script&gt;
+	  var counter = {
+	      'template': '#t',
+	      data(){
+		  return {count:0}
+	      },
+	      methods: {
+		  inc(){this.count++}
+	      }
+	  }
+	  var app = new Vue({
+	      comonents:{
+		  counter: counter
+	      }
+	  })
+	  app.$mount("#app")
+	&lt;/script&gt;
+      </pre>
+      或者组件内容并不需要做分发的话，可以通过inline-template标记它的内容，把它当作模板:
+      <pre>
+	&lt;script src="https://unpkg.com/vue/dist/vue.js"&gt;&lt;/script&gt;
+	&lt;div id="app"&gt;
+	  &lt;counter inline-template&gt;
+	    &lt;div&gt;
+	      &lt;span&gt;{{count}}&lt;/span&gt;
+	      &lt;button v-on:click="inc"&gt;+&lt;/button&gt;
+	      &lt;/div&gt;
+	    &lt;/counter&gt;
+	&lt;/div&gt;
+	&lt;script&gt;
+	  var counter = {
+	      data (){
+		  return {cont:0}
+	      },
+	      methods:{
+		  inc(){this.count++}
+	      }
+	  }
+	  var app = new Vue({
+	      compoents:{
+		  counter: counter
+	      }
+	  })
+	  app.$mount("#app")
+	&lt;/script&gt;
+      </pre>
+      <h3>函数式</h3>
+      <p>Render函数可以充分利用JavaScript语言在创建HTML模板方面的灵活性。实际上，组件的Template最终都会转换为Render函数。对于同一需求，使用Render函数的代码如下:</p>
+      <pre>
+	<script>
+      </pre>
+    </div>
+    
+    <script>
+
+      new Vue({
+	  el: "#app",
+      })
+    </script>
+</body>
+
+</html>
