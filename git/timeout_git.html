@@ -1,0 +1,25 @@
+已经不是第一次github出现这样连不上的情况，于是记录一下解决的过程。
+
+优先考虑修改host
+C盘
+–>Windows
+–>System32
+–>drivers
+–>etc
+使用记事本打开hosts文件
+访问
+http://github.global.ssl.fastly.net.ipaddress.com/#ipinfo
+记录IP Address x.x.x.x
+在hosts文件末尾添加
+x.x.x.x github.global.ssl.fastly.net
+
+访问
+http://github.com.ipaddress.com/#ipinfo
+记录IP Address x.x.x.x
+在hosts文件末尾添加
+x.x.x.x github.com
+
+保存hosts文件
+
+终端输入：
+ipconfig /flushdns
