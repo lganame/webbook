@@ -167,9 +167,139 @@
       </pre>
       <h3>函数式</h3>
       <p>Render函数可以充分利用JavaScript语言在创建HTML模板方面的灵活性。实际上，组件的Template最终都会转换为Render函数。对于同一需求，使用Render函数的代码如下:</p>
+      <pre><!--start-->
+	&lt;script src="https://unpkg.com/vue/dist/vue.js"&gt;&lt;/script&gt;
+	&lt;div id="app"&gt;
+	  &lt;counter&gt;&lt;/counter&gt;
+	&lt;/div&gt;
+	&lt;script&gt;
+	  var a = {
+	      data(){
+		  return {count: 1}
+	      },
+	      methods:{
+		  inc() {this.count++}
+	      },
+	      render:function(h){
+		  //var self=this;
+		  var buttonAttrs = {
+		      on:{click:this.inc},
+		      domProps: {
+			  innerHTML: '+'
+		      }，
+		  };//button属性
+		  var spanAttrs = {
+		      on:{click:this.inc},
+		      domProprs:{
+			  innerHTML: this.count.toString()
+		      }
+		  };//span属性
+		  var span=h('span',spanAttrs,[]);
+		  var button=h('button',buttonAttrs,[]);
+		  retrn h('div',{},[span,button])
+	      }
+	  }
+	  new Vue({
+	      el: '#app',
+	      components:{
+		  counter: a
+	      }
+	  })
+	&lt;/script&gt;
+      </pre><!--end-->
+      <p>函数render的参数h，其实是一个名为createElement的函数，可以用来创建元素。此函数的具体说明，请参考官方手册即可。为了方便，此处完整使用createElement的实例代码抄写自vue.js手册。如下</p>
       <pre>
-	<script>
+	createElement(
+	// {String| Object| Function)
+	// An HTML tag name,compoent options, or function returning one of these. Required.
+	'div',
+	//{Object}
+	//A data object corresponding to the attributes
+	//you would use in a template,Optional.
+	{
+	// (see details in the next section below)
+	},
+	// {String | Array}
+	// Children VNodes, Optional.
+	[
+	createElement('h1','hello world'),
+	createElement(MyComponent,{
+	props:{
+	someProp: 'foo'
+	}
+	}
+	),'bar']
+	)
       </pre>
+      <p>如果要标签名本身也是可以动态的，怎么办？比如我希望提供一个标签，可以根据属性值动态选择head的层级，像是把</p>
+      <pre>
+	&lt;h1&gt;header1&lt;/h1&gt;
+	&lt;h2&gt;header2&lt;/h2&gt;
+      </pre>
+      <p>可以替代为:</p>
+      <pre>
+	&lt;hdr :level="1"&gt;header1&lt;/hdr&gt;
+	&lt;hdr :level="2"&gt;header2&lt;/hdr&gt;
+      </pre>
+      <p>使用render函数解决此类问题是便利的。具体做法就是先注册一个组件:</p>
+      <pre><!--start-->
+	Vue.component('hdr',{
+	render: function(createElement){
+	return createElement(
+	'h1'+this.level, // tag name
+	this.$slots.default //aarray of children
+	)
+	},
+	props:{
+	level:{
+	type:Number,
+	required:true
+	}
+	}<!--props--end-->
+	}）
+      </pre><!--end-->
+      <p>随后在html内使用此组件</p>
+      <pre>
+	//javascript
+	new Vue({
+	el: '#example'
+	})
+	//html
+	&lt;div id="example"&gt;
+	  &lt;hdr :level="1"&gt;abc&lt;/hdr&gt;
+	  &lt;hdr :level="2"&gt;abc&lt;/hdr&gt;
+	&lt;/div&gt;
+      </pre><!--pre--end-->
+      <p>可以执行的代码在此</p>
+      <pre>
+	&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/vue/vue.js"&gt;
+	&lt;/script&gt;
+	&lt;div id="example"&gt;
+	  &lt;hdr :level="1"&gt;abc&lt;/hdr&gt;
+	  &lt;hdr :level="2"&gt;abc&lt;/hdr&gt;
+	&lt;/div&gt;
+	&lt;script type="text/javascript"&gt;
+	  Vue.component('hdr',{
+	      render: function(createElement){
+		  console.log(this.level)
+		  return createElement(
+		      'h1'+this.level,
+		      this.$slots.default
+		  )
+	      },
+	      props:{
+		  level:{
+		      type: Number,
+		      required: true
+		  }
+	      }
+	  })
+	  new Vue({
+	      el: '#exmple'
+	  })
+	&lt;/script&gt;
+      </pre><!--pre--end-->
+      <p>使用render函数传入一个createElement函数作为参数，你可以使用此函数来创建标签。在render函数内，可以通过this.$slots访问slot，从而把slot内的元素插入到当前被创建的标签内。</p>
     </div>
     
     <script>
